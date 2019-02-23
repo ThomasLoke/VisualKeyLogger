@@ -55,11 +55,10 @@
 		            		<argument>/C</argument>
 		            		<argument>javapackager_script.cmd</argument>
 		            		<argument>${env.JAVA_HOME}/bin/javapackager</argument>
-		            		<argument>main.VisualKeyLogger</argument>
+		            		<argument>main.${project.artifactId}</argument>
 		            		<argument>${project.build.directory}/classes</argument>
-		            		<argument>target</argument>
+		            		<argument>deploy</argument>
 		            		<argument>${project.artifactId}</argument>
-		            		<argument>${project.build.directory}/${project.artifactId}.jar</argument>
 		            	</arguments>
 		            </configuration>
 		    	</execution>
