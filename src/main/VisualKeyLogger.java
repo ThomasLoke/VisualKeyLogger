@@ -8,6 +8,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.JButton;
@@ -28,26 +30,30 @@ import org.jnativehook.dispatcher.SwingDispatchService;
 import org.jnativehook.keyboard.NativeKeyEvent;
 import org.jnativehook.keyboard.NativeKeyListener;
 
+import handler.AbstractEventHandler;
+import handler.KeyEventHandler;
+import ui.ContentManager;
+import ui.JTextAreaManager;
+
 /**
  * Entry point for application
  */
-public class VisualKeyLogger extends JFrame implements NativeKeyListener, WindowListener {
+public class VisualKeyLogger extends JFrame implements WindowListener {
     
     private static final long serialVersionUID = -3468171593621788434L;
     
-    private final JTextArea textArea; 
+    private final List<ContentManager> contentManagers = new ArrayList<>();
+    private final List<AbstractEventHandler> eventHandlers = new ArrayList<>();
     
-    private final AtomicBoolean shouldAppend = new AtomicBoolean(true); 
+    private final JTextAreaManager textAreaManager;
+    private final KeyEventHandler keyEventHandler;
     
     private VisualKeyLogger() {
-        // Set the event dispatcher to a swing safe executor service.
-        GlobalScreen.setEventDispatcher(new SwingDispatchService());
-
         setTitle("Visual KeyLogger");
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         addWindowListener(this);
         
-        textArea = new JTextArea();
+        JTextArea textArea = new JTextArea();
         textArea.setEditable(false);
         textArea.setFont(new Font("Serif", Font.BOLD, 20));
         DefaultCaret caret = (DefaultCaret) textArea.getCaret();
@@ -59,6 +65,14 @@ public class VisualKeyLogger extends JFrame implements NativeKeyListener, Window
         
         add(createButtonPanel(), BorderLayout.PAGE_END);
         
+        // Setup content managers
+        textAreaManager = new JTextAreaManager(textArea);
+        contentManagers.add(textAreaManager);
+        
+        // Register event handlers
+        keyEventHandler = new KeyEventHandler(textAreaManager);
+        eventHandlers.add(keyEventHandler);
+        
         pack();
         setVisible(true);
     }
@@ -68,11 +82,7 @@ public class VisualKeyLogger extends JFrame implements NativeKeyListener, Window
         toolBar.setFloatable(false);
         
         JButton clearButton = new JButton("Clear display");
-        clearButton.addActionListener(new ActionListener() {
-            @Override public void actionPerformed(ActionEvent e) {
-                textArea.setText("");
-            }
-        });
+        clearButton.addActionListener(e -> contentManagers.forEach(ContentManager::clearText));
         toolBar.add(clearButton);
         
         JButton suspendButton = new JButton("Suspend input");
@@ -81,7 +91,7 @@ public class VisualKeyLogger extends JFrame implements NativeKeyListener, Window
         
         suspendButton.addActionListener(new ActionListener() {
             @Override public void actionPerformed(ActionEvent e) {
-                shouldAppend.getAndSet(false);
+                eventHandlers.forEach(AbstractEventHandler::pause);
                 suspendButton.setVisible(false);
                 resumeButton.setVisible(true);
             }
@@ -89,7 +99,7 @@ public class VisualKeyLogger extends JFrame implements NativeKeyListener, Window
         toolBar.add(suspendButton);
         resumeButton.addActionListener(new ActionListener() {
             @Override public void actionPerformed(ActionEvent e) {
-                shouldAppend.getAndSet(true);
+                eventHandlers.forEach(AbstractEventHandler::resume);
                 suspendButton.setVisible(true);
                 resumeButton.setVisible(false);
             }
@@ -116,7 +126,7 @@ public class VisualKeyLogger extends JFrame implements NativeKeyListener, Window
             System.exit(1);
         }
 
-        GlobalScreen.addNativeKeyListener(this);
+        GlobalScreen.addNativeKeyListener(keyEventHandler);
     }
     
     @Override public void windowClosed(WindowEvent e) {
@@ -135,15 +145,6 @@ public class VisualKeyLogger extends JFrame implements NativeKeyListener, Window
     @Override public void windowDeiconified(WindowEvent e) { }
     @Override public void windowActivated(WindowEvent e) { }
     @Override public void windowDeactivated(WindowEvent e) { }
-    
-    @Override public void nativeKeyTyped(NativeKeyEvent nativeEvent) { }
-    @Override public void nativeKeyPressed(NativeKeyEvent nativeEvent) {
-        if (!shouldAppend.get())
-            return;
-        String text = String.format("%s\t%s\n", LocalTime.now(), NativeKeyEvent.getKeyText(nativeEvent.getKeyCode()));
-        textArea.append(text);
-    }
-    @Override public void nativeKeyReleased(NativeKeyEvent nativeEvent) { }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
