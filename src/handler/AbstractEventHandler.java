@@ -2,11 +2,11 @@ package handler;
 
 import ui.ContentManager;
 
-public abstract class AbstractEventHandler<T> {
+public abstract class AbstractEventHandler<M extends ContentManager, T> {
     
-    protected ContentManager manager;
+    protected M manager;
     
-    protected AbstractEventHandler(ContentManager manager) {
+    protected AbstractEventHandler(M manager) {
         this.manager = manager;
     }
 

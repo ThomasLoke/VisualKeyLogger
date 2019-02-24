@@ -7,15 +7,16 @@ import org.jnativehook.keyboard.NativeKeyEvent;
 import org.jnativehook.keyboard.NativeKeyListener;
 
 import ui.ContentManager;
+import ui.JTextAreaManager;
 
 /**
  * Receives key presses from the user and translates them into events that get dispatched to the UI
  */
-public class KeyEventHandler extends AbstractEventHandler<NativeKeyEvent> implements NativeKeyListener {
+public class KeyEventHandler extends AbstractEventHandler<JTextAreaManager, NativeKeyEvent> implements NativeKeyListener {
     
     private final AtomicBoolean shouldAppend = new AtomicBoolean(true);
     
-    public KeyEventHandler(ContentManager manager) {
+    public KeyEventHandler(JTextAreaManager manager) {
         super(manager);
     }
     

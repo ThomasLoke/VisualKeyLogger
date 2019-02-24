@@ -1,28 +1,19 @@
 package ui;
 
 import javax.swing.JTextArea;
-import javax.swing.SwingUtilities;
 
-public class JTextAreaManager implements ContentManager {
-    
-    /** ALL operations on this must be wrapped with {@link handleEvent} */
-    private final JTextArea textArea;
+public class JTextAreaManager extends ContentManager<JTextArea> {
     
     public JTextAreaManager(JTextArea textArea) {
-        this.textArea = textArea;
+        super(textArea);
     }
 
-    @Override public void addText(String str) {
-        handleEvent(() -> textArea.append(str));
+    public void addText(String str) {
+        handleEvent(content -> content.append(str));
     }
 
-    @Override public void clearText() {
-        handleEvent(() -> textArea.setText(""));
-    }
-
-    /** Executes the event on the EDT */
-    private void handleEvent(Runnable runnable) {
-        SwingUtilities.invokeLater(runnable);
+    public void clear() {
+        handleEvent(content -> content.setText(""));
     }
 
 }

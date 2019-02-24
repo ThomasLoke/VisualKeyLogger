@@ -16,6 +16,7 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenuBar;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -53,6 +54,8 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         addWindowListener(this);
         
+        setJMenuBar(createMenuBar());
+        
         JTextArea textArea = new JTextArea();
         textArea.setEditable(false);
         textArea.setFont(new Font("Serif", Font.BOLD, 20));
@@ -77,34 +80,36 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
         setVisible(true);
     }
     
+    private JMenuBar createMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+        return menuBar;
+    }
+    
     private JComponent createButtonPanel() {
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
         
         JButton clearButton = new JButton("Clear display");
-        clearButton.addActionListener(e -> contentManagers.forEach(ContentManager::clearText));
+        clearButton.setFocusable(false);
+        clearButton.addActionListener(e -> contentManagers.forEach(ContentManager::clear));
         toolBar.add(clearButton);
         
-        JButton suspendButton = new JButton("Suspend input");
-        JButton resumeButton = new JButton("Resume input");
-        resumeButton.setVisible(false);
-        
-        suspendButton.addActionListener(new ActionListener() {
+        JButton suspendResumeButton = new JButton("Suspend input");
+        suspendResumeButton.setFocusable(false);
+        suspendResumeButton.addActionListener(new ActionListener() {
+            private boolean paused = false;
             @Override public void actionPerformed(ActionEvent e) {
-                eventHandlers.forEach(AbstractEventHandler::pause);
-                suspendButton.setVisible(false);
-                resumeButton.setVisible(true);
+                if (paused) {
+                    eventHandlers.forEach(AbstractEventHandler::resume);
+                    suspendResumeButton.setText("Suspend input");
+                } else {
+                    eventHandlers.forEach(AbstractEventHandler::pause);
+                    suspendResumeButton.setText("Resume input");
+                }
+                paused = !paused;
             }
         });
-        toolBar.add(suspendButton);
-        resumeButton.addActionListener(new ActionListener() {
-            @Override public void actionPerformed(ActionEvent e) {
-                eventHandlers.forEach(AbstractEventHandler::resume);
-                suspendButton.setVisible(true);
-                resumeButton.setVisible(false);
-            }
-        });
-        toolBar.add(resumeButton);
+        toolBar.add(suspendResumeButton);
         
         JPanel toolBarPanel = new JPanel();
         // Center-align the button panel by padding it on the left/right
