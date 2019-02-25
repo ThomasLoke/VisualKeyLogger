@@ -16,7 +16,9 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
 import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -82,7 +84,23 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
     
     private JMenuBar createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
+        menuBar.add(createFileMenu());
         return menuBar;
+    }
+    
+    private JMenu createFileMenu() {
+        JMenu menu = new JMenu("Import");
+        menu.getAccessibleContext().setAccessibleDescription("Import options");
+        
+        JMenuItem importRemapItem = new JMenuItem("Import remapping file");
+        importRemapItem.getAccessibleContext().setAccessibleDescription("Import remapping file to alter key-press text");
+        menu.add(importRemapItem);
+        
+        JMenuItem clearRemapItem = new JMenuItem("Clear remapping");
+        clearRemapItem.getAccessibleContext().setAccessibleDescription("Clear any remapping settings");
+        menu.add(clearRemapItem);
+        
+        return menu;
     }
     
     private JComponent createButtonPanel() {
