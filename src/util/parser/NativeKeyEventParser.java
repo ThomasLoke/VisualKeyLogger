@@ -1,20 +1,42 @@
-package util;
+package util.parser;
 
 import static org.jnativehook.keyboard.NativeKeyEvent.*;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
+import util.problem.ProblemStore;
+
+/**
+ * Parses a given file and returns a Map<Integer, String> that maps the virtual key code to its String representation
+ * Required format for file: Two-column CSV of (1=String, 2=String) where 1 is the default string representation of 
+ * the key-press and 2 is the new string representation.
+ */
 public class NativeKeyEventParser {
     
     private static void addKeyCodes(int... keyCodes) {
+        // Handle potential duplicates in text representations of the different virtual key codes
         for (int keyCode : keyCodes) {
-            assert !VIRTUAL_KEY_CODE_TO_TEXT.containsKey(keyCode);
-            VIRTUAL_KEY_CODE_TO_TEXT.put(keyCode, getKeyText(keyCode));
+            String baseText = getKeyText(keyCode);
+            String text = baseText;
+            int count = 1;
+            while (VIRTUAL_KEY_CODE_TO_TEXT.containsValue(text)) {
+                text = String.format("%s_%d", baseText, ++count);
+            }
+            VIRTUAL_KEY_CODE_TO_TEXT.put(keyCode, text);
         }
     }
 
-    public static final Map<Integer, String> VIRTUAL_KEY_CODE_TO_TEXT = new HashMap<>();
+    // Store keys in insertion order, which has some logical grouping to it
+    public static final LinkedHashMap<Integer, String> VIRTUAL_KEY_CODE_TO_TEXT = new LinkedHashMap<>();
     
     static {
         addKeyCodes(VC_ESCAPE);
@@ -44,4 +66,32 @@ public class NativeKeyEventParser {
         addKeyCodes(VC_SUN_STOP, VC_SUN_PROPS, VC_SUN_FRONT, VC_SUN_OPEN, VC_SUN_FIND, VC_SUN_AGAIN, VC_SUN_UNDO, VC_SUN_COPY, VC_SUN_INSERT, VC_SUN_CUT);
         addKeyCodes(VC_UNDEFINED);
     }
+    
+    private final File file;
+    private final Map<Integer, String> keyCodeToTextRemapping = new HashMap<>();
+    
+    public NativeKeyEventParser(File file) {
+        this.file = file;
+    }
+    
+    public ProblemStore parse() {
+        // Initialise with the default mapping
+        keyCodeToTextRemapping.putAll(VIRTUAL_KEY_CODE_TO_TEXT);
+        
+        ProblemStore problems = new ProblemStore();
+        
+        try (Stream<String> stream = Files.lines(file.toPath())) {
+            stream.forEach(new Consumer<String>() {
+                @Override public void accept(String line) {
+                    List<String> parts = Arrays.asList(line.split(","));
+                    parts.forEach(String::trim);
+                    // TODO: processing
+                }
+            });
+        } catch (IOException e) {
+            problems.addError("Unable to read file", e);
+        }
+        return problems;
+    }
+    
 }

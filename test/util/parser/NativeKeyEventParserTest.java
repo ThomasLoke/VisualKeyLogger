@@ -1,7 +1,7 @@
-package util;
+package util.parser;
 
 import static org.junit.Assert.*;
-import static util.NativeKeyEventParser.*;
+import static util.parser.NativeKeyEventParser.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 
 public class NativeKeyEventParserTest {
 
-    // FIXME: Failing, because VC_MEDIA_STOP and VC_BROWSER_STOP have the same description "Stop"
     @Test public void testUniqueKeyText() {
         List<String> keyValues = new ArrayList<>(VIRTUAL_KEY_CODE_TO_TEXT.values());
         Collections.sort(keyValues);
