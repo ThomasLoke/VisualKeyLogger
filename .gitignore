@@ -1,6 +1,7 @@
 .classpath
 .project
 .settings
+*.jar
 bin
 target
 deploy

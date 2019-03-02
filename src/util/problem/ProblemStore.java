@@ -1,9 +1,14 @@
 package util.problem;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 
 public class ProblemStore {
     
@@ -15,57 +20,75 @@ public class ProblemStore {
 
     public static class Problem {
         
-        public final String description;
-        public final Throwable t;
+        public final Level level;
+        public final @NonNull String description;
+        public final @Nullable Throwable t;
         
-        public Problem(String description) {
-            this(description, null);
+        public Problem(Level level, String description) {
+            this(level, description, null);
         }
         
-        public Problem(Throwable t) {
-            this(t.getMessage(), t);
+        public Problem(Level level, @NonNull Throwable t) {
+            this(level, t.getMessage(), t);
         }
         
-        public Problem(String description, Throwable t) {
+        public Problem(Level level, @NonNull String description, @Nullable Throwable t) {
+            this.level = level;
             this.description = description;
             this.t = t;
         }
         
         @Override public String toString() {
-            return description;
+            return String.format("[%s] %s%s", level, description, t == null ? "" : (": " + t.getMessage()));
         }
         
     }
     
-    private final Map<Level, List<Problem>> problems;
+    private final List<Problem> problems;
+    private final Map<Level, List<Integer>> indicesForLevel;
     
     public ProblemStore() {
         this(INITIAL_CAPACITY);
     }
     
     public ProblemStore(int initialCapacity) {
-        problems = new HashMap<>();
+        problems = new ArrayList<>(initialCapacity);
+        indicesForLevel = new HashMap<>();
         for (Level level : Level.values()) {
-            problems.put(level, new ArrayList<>(initialCapacity));
+            indicesForLevel.put(level, new ArrayList<>());
         }
     }
     
-    public void clear() {
-        problems.forEach((l, c) -> c.clear());
+    public synchronized void clear() {
+        problems.clear();
+        indicesForLevel.values().forEach(Collection::clear);
     }
     
-    public void addError(String description, Throwable t) {
+    public void addError(String description, @Nullable Throwable t) {
         addProblem(Level.Error, description, t);
     }
     
-    public void addProblem(Level level, String description, Throwable t) {
-        List<Problem> problems = getProblems(level);
-        problems.add(new Problem(description, t));
+    public void addWarning(String description) {
+        addProblem(Level.Warning, description, null);
     }
     
-    /** Returns the backing list -- make a copy if you don't want to unintentionally modify the contents of the ProblemStore */
-    public List<Problem> getProblems(Level level) {
-        return problems.get(level);
+    public void addInfo(String description) {
+        addProblem(Level.Info, description, null);
+    }
+    
+    public synchronized void addProblem(Level level, String description, @Nullable Throwable t) {
+        problems.add(new Problem(level, description, t));
+        addIndexForLevel(level, problems.size() - 1);
+    }
+    
+    private synchronized void addIndexForLevel(Level level, int index) {
+        List<Integer> indices = indicesForLevel.get(level);
+        indices.add(index);
+    }
+    
+    public synchronized List<Problem> getProblems(Level level) {
+        List<Integer> indices = indicesForLevel.get(level);
+        return indices.stream().map(idx -> problems.get(idx)).collect(Collectors.toList());
     }
     
     public boolean isEmpty(Level level) {
@@ -76,4 +99,9 @@ public class ProblemStore {
         return isEmpty(Level.Error);
     }
     
+    @Override public String toString() {
+        StringBuilder sb = new StringBuilder();
+        problems.forEach(p -> sb.append(p.toString()));
+        return sb.toString();
+    }
 }

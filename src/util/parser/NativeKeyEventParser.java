@@ -6,12 +6,15 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.eclipse.jdt.annotation.NonNull;
 
 import util.problem.ProblemStore;
 
@@ -25,7 +28,7 @@ public class NativeKeyEventParser {
     private static void addKeyCodes(int... keyCodes) {
         // Handle potential duplicates in text representations of the different virtual key codes
         for (int keyCode : keyCodes) {
-            String baseText = getKeyText(keyCode);
+            String baseText = getKeyText(keyCode).trim();
             String text = baseText;
             int count = 1;
             while (VIRTUAL_KEY_CODE_TO_TEXT.containsValue(text)) {
@@ -36,7 +39,7 @@ public class NativeKeyEventParser {
     }
 
     // Store keys in insertion order, which has some logical grouping to it
-    public static final LinkedHashMap<Integer, String> VIRTUAL_KEY_CODE_TO_TEXT = new LinkedHashMap<>();
+    public static final Map<Integer, String> VIRTUAL_KEY_CODE_TO_TEXT = new LinkedHashMap<>();
     
     static {
         addKeyCodes(VC_ESCAPE);
@@ -67,10 +70,12 @@ public class NativeKeyEventParser {
         addKeyCodes(VC_UNDEFINED);
     }
     
-    private final File file;
-    private final Map<Integer, String> keyCodeToTextRemapping = new HashMap<>();
+    public static final Map<String, Integer> TEXT_TO_VIRTUAL_KEY_CODE = VIRTUAL_KEY_CODE_TO_TEXT.entrySet().stream().collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
     
-    public NativeKeyEventParser(File file) {
+    private final @NonNull File file;
+    private final @NonNull Map<Integer, String> keyCodeToTextRemapping = new LinkedHashMap<>();
+    
+    public NativeKeyEventParser(@NonNull File file) {
         this.file = file;
     }
     
@@ -78,20 +83,42 @@ public class NativeKeyEventParser {
         // Initialise with the default mapping
         keyCodeToTextRemapping.putAll(VIRTUAL_KEY_CODE_TO_TEXT);
         
+        AtomicInteger inputLineCount = new AtomicInteger();
+        AtomicInteger parsedLineCount = new AtomicInteger();
         ProblemStore problems = new ProblemStore();
-        
         try (Stream<String> stream = Files.lines(file.toPath())) {
             stream.forEach(new Consumer<String>() {
                 @Override public void accept(String line) {
+                    inputLineCount.getAndIncrement();
+                    
                     List<String> parts = Arrays.asList(line.split(","));
                     parts.forEach(String::trim);
-                    // TODO: processing
+                    if (parts.size() != 2) {
+                        problems.addWarning(String.format("Unable to parse the line \'%s\': Does not conform to the expected format, so ignoring line", line));
+                        return;
+                    }
+                    String keyText = parts.get(0);
+                    Integer keyCode = TEXT_TO_VIRTUAL_KEY_CODE.get(keyText);
+                    if (keyCode == null) {
+                        problems.addWarning(String.format("Unable to parse the line \'%s\': No matching key text found for \'%s\', so ignoring line", line, keyText));
+                        return;
+                    }
+                    String keyDescription = parts.get(1);
+                    // If its an empty string, then interpret that as a null value, i.e. ignore key-presses from that key
+                    keyCodeToTextRemapping.put(keyCode, keyDescription.isEmpty() ? null : keyDescription);
+                    
+                    parsedLineCount.getAndIncrement();
                 }
             });
         } catch (IOException e) {
             problems.addError("Unable to read file", e);
         }
+        problems.addInfo(String.format("Successfully parsed %d/%d lines", parsedLineCount.get(), inputLineCount.get()));
         return problems;
+    }
+    
+    public @NonNull Map<Integer, String> getRemapping() {
+        return keyCodeToTextRemapping;
     }
     
 }
