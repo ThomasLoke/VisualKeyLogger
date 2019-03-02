@@ -7,24 +7,31 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.io.File;
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringJoiner;
 
 import javax.swing.JButton;
 import javax.swing.JComponent;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
+import javax.swing.filechooser.FileFilter;
 import javax.swing.text.DefaultCaret;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
 
@@ -39,6 +46,16 @@ import ui.JTextAreaManager;
 public class VisualKeyLogger extends JFrame implements WindowListener {
     
     private static final long serialVersionUID = -3468171593621788434L;
+    
+    private static final @NonNull FileFilter CSV_FILTER = new FileFilter() {
+        @Override public boolean accept(File file) {
+            return file.getName().endsWith(".csv");
+        }
+
+        @Override public String getDescription() {
+            return "CSV files";
+        }
+    };
     
     private final List<ContentManager> contentManagers = new ArrayList<>();
     private final List<AbstractEventHandler> eventHandlers = new ArrayList<>();
@@ -79,17 +96,34 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
     
     private JMenuBar createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
-        menuBar.add(createFileMenu());
+        menuBar.add(createRemappingMenu());
         return menuBar;
     }
     
-    private JMenu createFileMenu() {
-        JMenu menu = new JMenu("Import");
+    private JMenu createRemappingMenu() {
+        JMenu menu = new JMenu("Remapping settings");
         menu.getAccessibleContext().setAccessibleDescription("Import options");
         
         JMenuItem importRemapItem = new JMenuItem("Import remapping file");
         importRemapItem.getAccessibleContext().setAccessibleDescription("Import remapping file to alter key-press text");
+        importRemapItem.addActionListener(new ActionListener() {
+            @Override public void actionPerformed(ActionEvent e) {
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setFileFilter(CSV_FILTER);
+                int returnVal = fileChooser.showOpenDialog(VisualKeyLogger.this);
+                if (returnVal == JFileChooser.APPROVE_OPTION) {
+                    File file = fileChooser.getSelectedFile();
+                    if (file != null) {
+                        // TODO: Parse file and update stuff
+                    }
+                }
+            }
+        });
         menu.add(importRemapItem);
+        
+        JMenuItem showRemapItem = new JMenuItem("Show remapping settings");
+        showRemapItem.getAccessibleContext().setAccessibleDescription("Displays the current remapping settings");
+        menu.add(showRemapItem);
         
         JMenuItem clearRemapItem = new JMenuItem("Clear remapping");
         clearRemapItem.getAccessibleContext().setAccessibleDescription("Clear any remapping settings");
@@ -125,7 +159,7 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
         toolBar.add(suspendResumeButton);
         
         JPanel toolBarPanel = new JPanel();
-        // Center-align the button panel by padding it on the left/right
+        // Centre-align the button panel by padding it on the left/right
         toolBarPanel.add(new JLabel());
         toolBarPanel.add(toolBar);
         toolBarPanel.add(new JLabel());
@@ -134,7 +168,7 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
     }
     
     @Override public void windowOpened(WindowEvent e) {
-        // Initialize native hook.
+        // Initialise native hook.
         try {
             GlobalScreen.registerNativeHook();
         }
@@ -163,6 +197,24 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
     @Override public void windowDeiconified(WindowEvent e) { }
     @Override public void windowActivated(WindowEvent e) { }
     @Override public void windowDeactivated(WindowEvent e) { }
+    
+    static {
+        Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
+            @Override public void uncaughtException(Thread t, Throwable e) {
+                // Catch any unhandled exceptions and report them
+                StringJoiner sj = new StringJoiner(System.lineSeparator());
+                sj.add("An unexpected error caused this application to terminate; please report the follow error:");
+                sj.add("");
+                sj.add("Thread: " + t.getName());
+                sj.add(String.format("%s: %s", e.getClass().getName(), e.getMessage()));
+                for (StackTraceElement elem : e.getStackTrace()) {
+                    sj.add("    " + elem.toString());
+                }
+                JOptionPane.showMessageDialog(null, sj.toString(), "Uh-oh!", JOptionPane.ERROR_MESSAGE);
+                System.exit(1);
+            }
+        });
+    }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(new Runnable() {
