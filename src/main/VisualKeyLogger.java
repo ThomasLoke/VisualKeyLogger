@@ -11,6 +11,7 @@ import java.io.File;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.StringJoiner;
 
 import javax.swing.JButton;
@@ -102,34 +103,59 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
     
     private JMenu createRemappingMenu() {
         JMenu menu = new JMenu("Remapping settings");
-        menu.getAccessibleContext().setAccessibleDescription("Import options");
+        menu.getAccessibleContext().setAccessibleDescription("Remapping settings");
         
-        JMenuItem importRemapItem = new JMenuItem("Import remapping file");
-        importRemapItem.getAccessibleContext().setAccessibleDescription("Import remapping file to alter key-press text");
-        importRemapItem.addActionListener(new ActionListener() {
+        JMenuItem importItem = new JMenuItem("Import");
+        importItem.getAccessibleContext().setAccessibleDescription("Import remapping settings from file");
+        importItem.addActionListener(new ActionListener() {
             @Override public void actionPerformed(ActionEvent e) {
-                JFileChooser fileChooser = new JFileChooser();
-                fileChooser.setFileFilter(CSV_FILTER);
-                int returnVal = fileChooser.showOpenDialog(VisualKeyLogger.this);
-                if (returnVal == JFileChooser.APPROVE_OPTION) {
-                    File file = fileChooser.getSelectedFile();
-                    if (file != null) {
-                        // TODO: Parse file and update stuff
-                    }
-                }
+                Optional<File> csvFile = getCSVFile();
+                if (!csvFile.isPresent())
+                    return;
+                // TODO: Check file exists and is present
             }
         });
-        menu.add(importRemapItem);
+        menu.add(importItem);
         
-        JMenuItem showRemapItem = new JMenuItem("Show remapping settings");
-        showRemapItem.getAccessibleContext().setAccessibleDescription("Displays the current remapping settings");
-        menu.add(showRemapItem);
+        JMenuItem exportItem = new JMenuItem("Export");
+        exportItem.getAccessibleContext().setAccessibleDescription("Export current remapping settings to file");
+        exportItem.addActionListener(new ActionListener() {
+            @Override public void actionPerformed(ActionEvent e) {
+                Optional<File> csvFileOption = getCSVFile();
+                if (!csvFileOption.isPresent())
+                    return;
+                File csvFile = csvFileOption.get();
+                if (csvFile.exists()) {
+                    int confirm = JOptionPane.showConfirmDialog(VisualKeyLogger.this, 
+                            String.format("The file %s already exists--do you want to overwrite it?", csvFile.getAbsolutePath()), 
+                            "Confirm overwrite",
+                            JOptionPane.OK_CANCEL_OPTION,
+                            JOptionPane.WARNING_MESSAGE);
+                    if (confirm != JOptionPane.OK_OPTION)
+                        return;
+                }
+                // Dump to file
+            }
+        });
+        menu.add(exportItem);
         
-        JMenuItem clearRemapItem = new JMenuItem("Clear remapping");
-        clearRemapItem.getAccessibleContext().setAccessibleDescription("Clear any remapping settings");
-        menu.add(clearRemapItem);
+        JMenuItem editItem = new JMenuItem("Edit");
+        editItem.getAccessibleContext().setAccessibleDescription("Display and edit remapping settings");
+        editItem.addActionListener(new ActionListener() {
+            @Override public void actionPerformed(ActionEvent e) {
+                
+            }
+        });
+        menu.add(editItem);
         
         return menu;
+    }
+    
+    private Optional<File> getCSVFile() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileFilter(CSV_FILTER);
+        int returnVal = fileChooser.showOpenDialog(VisualKeyLogger.this);
+        return returnVal != JFileChooser.APPROVE_OPTION ? Optional.empty() : Optional.ofNullable(fileChooser.getSelectedFile());
     }
     
     private JComponent createButtonPanel() {
@@ -210,7 +236,12 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
                 for (StackTraceElement elem : e.getStackTrace()) {
                     sj.add("    " + elem.toString());
                 }
-                JOptionPane.showMessageDialog(null, sj.toString(), "Uh-oh!", JOptionPane.ERROR_MESSAGE);
+                String text = sj.toString();
+                // JTextArea to facilitate copy-paste
+                JTextArea textArea = new JTextArea();
+                textArea.setText(text);
+                textArea.setEditable(false);
+                JOptionPane.showMessageDialog(null, textArea, "Uh-oh!", JOptionPane.ERROR_MESSAGE);
                 System.exit(1);
             }
         });

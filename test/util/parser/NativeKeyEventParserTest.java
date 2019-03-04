@@ -2,7 +2,6 @@ package util.parser;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static util.parser.NativeKeyEventParser.VIRTUAL_KEY_CODE_TO_TEXT;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -22,7 +21,7 @@ public class NativeKeyEventParserTest {
     @Rule public TemporaryFolder tempFolder = new TemporaryFolder();
 
     @Test public void testUniqueKeyText() throws Exception {
-        List<String> keyValues = new ArrayList<>(VIRTUAL_KEY_CODE_TO_TEXT.values());
+        List<String> keyValues = new ArrayList<>(NativeKeyEventMapping.DEFAULT.values());
         Collections.sort(keyValues);
         // Check that there's a 1-1 mapping between the key and values
         assertEquals(keyValues.size(), new HashSet<>(keyValues).size());
