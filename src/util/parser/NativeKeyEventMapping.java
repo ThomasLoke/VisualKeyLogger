@@ -69,5 +69,14 @@ public class NativeKeyEventMapping extends LinkedHashMap<Integer, String> {
     private NativeKeyEventMapping(@NonNull NativeKeyEventMapping other) {
         super(other);
     }
+    
+    @Override public String toString() {
+        StringBuilder sb = new StringBuilder();
+        entrySet().forEach(entry -> {
+            String value = entry.getValue();
+            sb.append(String.format("%s, %s\n", entry.getKey(), value == null ? "" : value));
+        });
+        return sb.toString();
+    }
 
 }

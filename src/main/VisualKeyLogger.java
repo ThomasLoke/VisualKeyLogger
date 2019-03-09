@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.StringJoiner;
+import java.util.UUID;
 
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -40,6 +41,7 @@ import handler.AbstractEventHandler;
 import handler.KeyEventHandler;
 import ui.ContentManager;
 import ui.JTextAreaManager;
+import util.ui.HistoricFileChooser;
 
 /**
  * Entry point for application
@@ -47,16 +49,6 @@ import ui.JTextAreaManager;
 public class VisualKeyLogger extends JFrame implements WindowListener {
     
     private static final long serialVersionUID = -3468171593621788434L;
-    
-    private static final @NonNull FileFilter CSV_FILTER = new FileFilter() {
-        @Override public boolean accept(File file) {
-            return file.getName().endsWith(".csv");
-        }
-
-        @Override public String getDescription() {
-            return "CSV files";
-        }
-    };
     
     private final List<ContentManager> contentManagers = new ArrayList<>();
     private final List<AbstractEventHandler> eventHandlers = new ArrayList<>();
@@ -108,9 +100,10 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
         JMenuItem importItem = new JMenuItem("Import");
         importItem.getAccessibleContext().setAccessibleDescription("Import remapping settings from file");
         importItem.addActionListener(new ActionListener() {
+            private final UUID uuid = UUID.randomUUID();
             @Override public void actionPerformed(ActionEvent e) {
-                Optional<File> csvFile = getCSVFile();
-                if (!csvFile.isPresent())
+                Optional<File> csvFileOption = HistoricFileChooser.getOrCreateFileChooser(uuid, HistoricFileChooser.CSV).showAndSelectFile(VisualKeyLogger.this);
+                if (!csvFileOption.isPresent())
                     return;
                 // TODO: Check file exists and is present
             }
@@ -120,8 +113,9 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
         JMenuItem exportItem = new JMenuItem("Export");
         exportItem.getAccessibleContext().setAccessibleDescription("Export current remapping settings to file");
         exportItem.addActionListener(new ActionListener() {
+            private final UUID uuid = UUID.randomUUID();
             @Override public void actionPerformed(ActionEvent e) {
-                Optional<File> csvFileOption = getCSVFile();
+                Optional<File> csvFileOption = HistoricFileChooser.getOrCreateFileChooser(uuid, HistoricFileChooser.CSV).showAndSelectFile(VisualKeyLogger.this);
                 if (!csvFileOption.isPresent())
                     return;
                 File csvFile = csvFileOption.get();
@@ -149,13 +143,6 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
         menu.add(editItem);
         
         return menu;
-    }
-    
-    private Optional<File> getCSVFile() {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setFileFilter(CSV_FILTER);
-        int returnVal = fileChooser.showOpenDialog(VisualKeyLogger.this);
-        return returnVal != JFileChooser.APPROVE_OPTION ? Optional.empty() : Optional.ofNullable(fileChooser.getSelectedFile());
     }
     
     private JComponent createButtonPanel() {
