@@ -7,17 +7,20 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.IOException;
 import java.lang.Thread.UncaughtExceptionHandler;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.JButton;
 import javax.swing.JComponent;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenu;
@@ -30,10 +33,8 @@ import javax.swing.JTextArea;
 import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
-import javax.swing.filechooser.FileFilter;
 import javax.swing.text.DefaultCaret;
 
-import org.eclipse.jdt.annotation.NonNull;
 import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
 
@@ -41,6 +42,7 @@ import handler.AbstractEventHandler;
 import handler.KeyEventHandler;
 import ui.ContentManager;
 import ui.JTextAreaManager;
+import util.parser.NativeKeyEventMapping;
 import util.ui.HistoricFileChooser;
 
 /**
@@ -53,6 +55,7 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
     private final List<ContentManager> contentManagers = new ArrayList<>();
     private final List<AbstractEventHandler> eventHandlers = new ArrayList<>();
     
+    private final AtomicReference<NativeKeyEventMapping> mappingRef;
     private final JTextAreaManager textAreaManager;
     private final KeyEventHandler keyEventHandler;
     
@@ -75,12 +78,14 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
         
         add(createButtonPanel(), BorderLayout.PAGE_END);
         
+        mappingRef = new AtomicReference<NativeKeyEventMapping>(NativeKeyEventMapping.createDefault());
+
         // Setup content managers
         textAreaManager = new JTextAreaManager(textArea);
         contentManagers.add(textAreaManager);
         
         // Register event handlers
-        keyEventHandler = new KeyEventHandler(textAreaManager);
+        keyEventHandler = new KeyEventHandler(textAreaManager, mappingRef);
         eventHandlers.add(keyEventHandler);
         
         pack();
@@ -105,7 +110,15 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
                 Optional<File> csvFileOption = HistoricFileChooser.getOrCreateFileChooser(uuid, HistoricFileChooser.CSV).showAndSelectFile(VisualKeyLogger.this);
                 if (!csvFileOption.isPresent())
                     return;
-                // TODO: Check file exists and is present
+                File csvFile = csvFileOption.get();
+                if (!csvFile.exists()) {
+                    JOptionPane.showMessageDialog(VisualKeyLogger.this,
+                            String.format("The selected file %s does not exist", csvFile.getAbsolutePath()),
+                            "Import error",
+                            JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                // Parse file and update model
             }
         });
         menu.add(importItem);
@@ -128,7 +141,14 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
                     if (confirm != JOptionPane.OK_OPTION)
                         return;
                 }
-                // Dump to file
+                try (BufferedWriter writer = Files.newBufferedWriter(csvFile.toPath())) {
+                    writer.write(mappingRef.get().toString());
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(
+                            VisualKeyLogger.this, String.format("Failed to write to the selected file %s: %s",
+                                    csvFile.getAbsolutePath(), ex.getMessage()),
+                            "Import error", JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
         menu.add(exportItem);

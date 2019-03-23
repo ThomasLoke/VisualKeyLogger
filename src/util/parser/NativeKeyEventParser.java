@@ -30,7 +30,8 @@ public class NativeKeyEventParser {
         this.file = file;
     }
     
-    public ProblemStore parse() {AtomicInteger inputLineCount = new AtomicInteger();
+    public ProblemStore parse() {
+        AtomicInteger inputLineCount = new AtomicInteger();
         AtomicInteger parsedLineCount = new AtomicInteger();
         ProblemStore problems = new ProblemStore();
         try (Stream<String> stream = Files.lines(file.toPath())) {

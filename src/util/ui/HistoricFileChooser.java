@@ -70,6 +70,7 @@ public class HistoricFileChooser {
         }
     }
     
+    /** @return Optional.empty() if no file selected or operation cancelled */
     public synchronized Optional<File> showAndSelectFile(Component parent) {
         int returnVal = fileChooser.showOpenDialog(parent);
         return returnVal != JFileChooser.APPROVE_OPTION ? Optional.empty() : Optional.ofNullable(fileChooser.getSelectedFile());

@@ -1,6 +1,7 @@
 package handler;
 
 import java.time.LocalTime;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -16,11 +17,13 @@ import util.parser.NativeKeyEventMapping;
  */
 public class KeyEventHandler extends AbstractEventHandler<JTextAreaManager, NativeKeyEvent> implements NativeKeyListener {
     
-    private final AtomicReference<NativeKeyEventMapping> mappingRef = new AtomicReference<>();
     private final @NonNull AtomicBoolean shouldAppend = new AtomicBoolean(true);
     
-    public KeyEventHandler(JTextAreaManager manager) {
+    private final AtomicReference<NativeKeyEventMapping> mappingRef;
+
+    public KeyEventHandler(JTextAreaManager manager, AtomicReference<NativeKeyEventMapping> mappingRef) {
         super(manager);
+        this.mappingRef = mappingRef;
     }
     
     @Override public void pause() {
@@ -37,19 +40,23 @@ public class KeyEventHandler extends AbstractEventHandler<JTextAreaManager, Nati
     @Override public void nativeKeyPressed(NativeKeyEvent nativeEvent) {
         if (!shouldAppend.get())
             return;
-        String text = buildString(nativeEvent);
-        manager.addText(text);
+        Optional<String> text = buildString(nativeEvent);
+        text.ifPresent(s -> manager.addText(s));
     }
     
-    private String buildString(NativeKeyEvent nativeEvent) {
-        String timestamp = LocalTime.now().toString();
-        
-        int keyCode = nativeEvent.getKeyCode();
+    private Optional<String> buildString(NativeKeyEvent nativeEvent) {
+        // Use the default mapping if none present
         NativeKeyEventMapping mapping = mappingRef.get();
-        String remapped = mapping == null ? null : mapping.get(keyCode);
-        String description = remapped != null ? remapped : NativeKeyEvent.getKeyText(keyCode);
+        mapping = mapping != null ? mapping : NativeKeyEventMapping.DEFAULT;
+
+        int keyCode = nativeEvent.getKeyCode();
+        String remapped = mapping.get(keyCode);
+        // Don't print anything if remapped to null
+        if (remapped == null)
+            return Optional.empty();
         
-        return String.format("%s\t%s\n", timestamp, description);
+        String timestamp = LocalTime.now().toString();
+        return Optional.of(String.format("%s\t%s\n", timestamp, remapped));
     }
 
 }

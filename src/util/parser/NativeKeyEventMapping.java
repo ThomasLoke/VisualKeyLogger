@@ -76,7 +76,14 @@ public class NativeKeyEventMapping extends LinkedHashMap<Integer, String> {
             String value = entry.getValue();
             sb.append(String.format("%s, %s\n", entry.getKey(), value == null ? "" : value));
         });
-        return sb.toString();
+
+        // Remove the last newline if present
+        String str = sb.toString();
+        if (str.length() > 0) {
+            str = str.substring(0, str.length() - 1);
+        }
+
+        return str;
     }
 
 }
