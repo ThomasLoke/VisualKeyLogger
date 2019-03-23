@@ -2,15 +2,16 @@ package util.parser;
 
 import static org.jnativehook.keyboard.NativeKeyEvent.*;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.eclipse.jdt.annotation.NonNull;
 
-public class NativeKeyEventMapping extends LinkedHashMap<Integer, String> {
+import util.map.WrappedMap;
 
-    private static final long serialVersionUID = -7299570138005290961L;
+public class NativeKeyEventMapping extends WrappedMap<Integer, String> {
     
     private static void addKeyCodes(int... keyCodes) {
         // Handle potential duplicates in text representations of the different virtual key codes
@@ -63,13 +64,19 @@ public class NativeKeyEventMapping extends LinkedHashMap<Integer, String> {
     }
     
     private NativeKeyEventMapping() {
-        super();
+        this(new LinkedHashMap<>());
+    }
+    
+    private NativeKeyEventMapping(@NonNull Map<Integer, String> map) {
+        // Make sure that all access to the backing container is synchronised
+        super(Collections.synchronizedMap(map));
     }
     
     private NativeKeyEventMapping(@NonNull NativeKeyEventMapping other) {
-        super(other);
+        // We know that access to the map is already synchronised, so no need to wrap it again
+        super(other.map);
     }
-    
+
     @Override public String toString() {
         StringBuilder sb = new StringBuilder();
         entrySet().forEach(entry -> {

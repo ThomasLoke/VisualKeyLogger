@@ -3,7 +3,6 @@ package handler;
 import java.time.LocalTime;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.jnativehook.keyboard.NativeKeyEvent;
@@ -19,11 +18,11 @@ public class KeyEventHandler extends AbstractEventHandler<JTextAreaManager, Nati
     
     private final @NonNull AtomicBoolean shouldAppend = new AtomicBoolean(true);
     
-    private final AtomicReference<NativeKeyEventMapping> mappingRef;
+    private final @NonNull NativeKeyEventMapping keyMapping;
 
-    public KeyEventHandler(JTextAreaManager manager, AtomicReference<NativeKeyEventMapping> mappingRef) {
+    public KeyEventHandler(JTextAreaManager manager, NativeKeyEventMapping keyMapping) {
         super(manager);
-        this.mappingRef = mappingRef;
+        this.keyMapping = keyMapping;
     }
     
     @Override public void pause() {
@@ -45,12 +44,8 @@ public class KeyEventHandler extends AbstractEventHandler<JTextAreaManager, Nati
     }
     
     private Optional<String> buildString(NativeKeyEvent nativeEvent) {
-        // Use the default mapping if none present
-        NativeKeyEventMapping mapping = mappingRef.get();
-        mapping = mapping != null ? mapping : NativeKeyEventMapping.DEFAULT;
-
         int keyCode = nativeEvent.getKeyCode();
-        String remapped = mapping.get(keyCode);
+        String remapped = keyMapping.get(keyCode);
         // Don't print anything if remapped to null
         if (remapped == null)
             return Optional.empty();

@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -35,6 +34,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 import javax.swing.text.DefaultCaret;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
 
@@ -55,7 +55,7 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
     private final List<ContentManager> contentManagers = new ArrayList<>();
     private final List<AbstractEventHandler> eventHandlers = new ArrayList<>();
     
-    private final AtomicReference<NativeKeyEventMapping> mappingRef;
+    private final @NonNull NativeKeyEventMapping keyMapping;
     private final JTextAreaManager textAreaManager;
     private final KeyEventHandler keyEventHandler;
     
@@ -78,14 +78,14 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
         
         add(createButtonPanel(), BorderLayout.PAGE_END);
         
-        mappingRef = new AtomicReference<NativeKeyEventMapping>(NativeKeyEventMapping.createDefault());
+        keyMapping = NativeKeyEventMapping.createDefault();
 
         // Setup content managers
         textAreaManager = new JTextAreaManager(textArea);
         contentManagers.add(textAreaManager);
         
         // Register event handlers
-        keyEventHandler = new KeyEventHandler(textAreaManager, mappingRef);
+        keyEventHandler = new KeyEventHandler(textAreaManager, keyMapping);
         eventHandlers.add(keyEventHandler);
         
         pack();
@@ -118,7 +118,7 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
                             JOptionPane.ERROR_MESSAGE);
                     return;
                 }
-                // Parse file and update model
+                // TODO: Parse file and update model
             }
         });
         menu.add(importItem);
@@ -142,12 +142,13 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
                         return;
                 }
                 try (BufferedWriter writer = Files.newBufferedWriter(csvFile.toPath())) {
-                    writer.write(mappingRef.get().toString());
+                    writer.write(keyMapping.toString());
                 } catch (IOException ex) {
-                    JOptionPane.showMessageDialog(
-                            VisualKeyLogger.this, String.format("Failed to write to the selected file %s: %s",
+                    JOptionPane.showMessageDialog(VisualKeyLogger.this,
+                            String.format("Failed to write to the selected file %s: %s",
                                     csvFile.getAbsolutePath(), ex.getMessage()),
-                            "Import error", JOptionPane.ERROR_MESSAGE);
+                            "Import error",
+                            JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
@@ -157,7 +158,7 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
         editItem.getAccessibleContext().setAccessibleDescription("Display and edit remapping settings");
         editItem.addActionListener(new ActionListener() {
             @Override public void actionPerformed(ActionEvent e) {
-                
+                // TODO: Display + edit dialog
             }
         });
         menu.add(editItem);
