@@ -142,7 +142,7 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
                         return;
                 }
                 try (BufferedWriter writer = Files.newBufferedWriter(csvFile.toPath())) {
-                    writer.write(keyMapping.toString());
+                    writer.write(keyMapping.getDefaultToMappedText());
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(VisualKeyLogger.this,
                             String.format("Failed to write to the selected file %s: %s",

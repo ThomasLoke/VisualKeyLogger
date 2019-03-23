@@ -5,12 +5,14 @@ import static org.jnativehook.keyboard.NativeKeyEvent.*;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.NonNullByDefault;
 
 import util.map.WrappedMap;
 
+@NonNullByDefault
 public class NativeKeyEventMapping extends WrappedMap<Integer, String> {
     
     private static void addKeyCodes(int... keyCodes) {
@@ -26,7 +28,7 @@ public class NativeKeyEventMapping extends WrappedMap<Integer, String> {
         }
     }
     
-    public static final @NonNull NativeKeyEventMapping DEFAULT = new NativeKeyEventMapping();
+    public static final NativeKeyEventMapping DEFAULT = new NativeKeyEventMapping();
     
     static {
         addKeyCodes(VC_ESCAPE);
@@ -57,32 +59,30 @@ public class NativeKeyEventMapping extends WrappedMap<Integer, String> {
         addKeyCodes(VC_UNDEFINED);
     }
     
-    public static final @NonNull Map<String, Integer> DEFAULT_INVERSE = DEFAULT.entrySet().stream().collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
+    public static final Map<String, Integer> DEFAULT_INVERSE = DEFAULT.entrySet().stream()
+            .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
     
-    public static @NonNull NativeKeyEventMapping createDefault() {
+    public static NativeKeyEventMapping createDefault() {
         return new NativeKeyEventMapping(DEFAULT);
     }
     
     private NativeKeyEventMapping() {
         this(new LinkedHashMap<>());
     }
+
+    private NativeKeyEventMapping(NativeKeyEventMapping other) {
+        // Use a copy so that we don't modify the backing map of the other remapping
+        super(new LinkedHashMap<>(other.map));
+    }
     
-    private NativeKeyEventMapping(@NonNull Map<Integer, String> map) {
-        // Make sure that all access to the backing container is synchronised
+    private NativeKeyEventMapping(LinkedHashMap<Integer, String> map) {
+        // Make sure that all access to the backing map is synchronised
         super(Collections.synchronizedMap(map));
     }
-    
-    private NativeKeyEventMapping(@NonNull NativeKeyEventMapping other) {
-        // We know that access to the map is already synchronised, so no need to wrap it again
-        super(other.map);
-    }
 
-    @Override public String toString() {
+    private String buildString(Function<Entry<Integer, String>, String> entryWriter) {
         StringBuilder sb = new StringBuilder();
-        entrySet().forEach(entry -> {
-            String value = entry.getValue();
-            sb.append(String.format("%s, %s\n", entry.getKey(), value == null ? "" : value));
-        });
+        entrySet().forEach(entry -> sb.append(entryWriter.apply(entry) + "\n"));
 
         // Remove the last newline if present
         String str = sb.toString();
@@ -91,6 +91,21 @@ public class NativeKeyEventMapping extends WrappedMap<Integer, String> {
         }
 
         return str;
+    }
+
+    public String getDefaultToMappedText() {
+        return buildString(entry -> {
+            Integer key = entry.getKey();
+            String value = entry.getValue();
+            return String.format("%s, %s", DEFAULT.get(key), value == null ? "" : value);
+        });
+    }
+
+    @Override public String toString() {
+        return buildString(entry -> {
+            String value = entry.getValue();
+            return String.format("%d, %s", entry.getKey(), value == null ? "" : value);
+        });
     }
 
 }
