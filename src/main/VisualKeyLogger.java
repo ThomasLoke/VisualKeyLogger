@@ -11,6 +11,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.lang.Thread.UncaughtExceptionHandler;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
@@ -134,14 +135,16 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
                 File csvFile = csvFileOption.get();
                 if (csvFile.exists()) {
                     int confirm = JOptionPane.showConfirmDialog(VisualKeyLogger.this, 
-                            String.format("The file %s already exists--do you want to overwrite it?", csvFile.getAbsolutePath()), 
+                            String.format("The file %s already exists; do you want to overwrite it?", csvFile.getAbsolutePath()), 
                             "Confirm overwrite",
                             JOptionPane.OK_CANCEL_OPTION,
                             JOptionPane.WARNING_MESSAGE);
                     if (confirm != JOptionPane.OK_OPTION)
                         return;
                 }
-                try (BufferedWriter writer = Files.newBufferedWriter(csvFile.toPath())) {
+
+                // Write remapping contents to file
+                try (BufferedWriter writer = Files.newBufferedWriter(csvFile.toPath(), StandardCharsets.UTF_16)) {
                     writer.write(keyMapping.getDefaultToMappedText());
                 } catch (IOException ex) {
                     JOptionPane.showMessageDialog(VisualKeyLogger.this,
@@ -149,7 +152,12 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
                                     csvFile.getAbsolutePath(), ex.getMessage()),
                             "Import error",
                             JOptionPane.ERROR_MESSAGE);
+                    return;
                 }
+
+                // Show completion dialog
+                JOptionPane.showMessageDialog(VisualKeyLogger.this,
+                        String.format("Successfully exported remapping settings to %s", csvFile.getAbsolutePath()));
             }
         });
         menu.add(exportItem);

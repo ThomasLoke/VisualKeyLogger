@@ -18,7 +18,7 @@ public class NativeKeyEventMapping extends WrappedMap<Integer, String> {
     private static void addKeyCodes(int... keyCodes) {
         // Handle potential duplicates in text representations of the different virtual key codes
         for (int keyCode : keyCodes) {
-            String baseText = getKeyText(keyCode).trim();
+            String baseText = getKeyText(keyCode).replace(",", "").trim();
             String text = baseText;
             int count = 1;
             while (DEFAULT.containsValue(text)) {
