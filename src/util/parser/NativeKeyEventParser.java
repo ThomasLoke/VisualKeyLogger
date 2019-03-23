@@ -1,7 +1,6 @@
 package util.parser;
 
-import static util.parser.NativeKeyEventMapping.DEFAULT_INVERSE;
-import static util.parser.NativeKeyEventMapping.createDefault;
+import static util.parser.NativeKeyEventMapping.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.eclipse.jdt.annotation.NonNull;
@@ -40,7 +40,7 @@ public class NativeKeyEventParser {
                     inputLineCount.getAndIncrement();
                     
                     List<String> parts = Arrays.asList(line.split(","));
-                    parts.forEach(String::trim);
+                    parts = parts.stream().map(String::trim).collect(Collectors.toList());
                     if (parts.size() != 2) {
                         problems.addWarning(String.format("Unable to parse the line \'%s\': Does not conform to the expected format, so ignoring line", line));
                         return;

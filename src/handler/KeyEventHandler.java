@@ -20,7 +20,7 @@ public class KeyEventHandler extends AbstractEventHandler<JTextAreaManager, Nati
     
     private final @NonNull NativeKeyEventMapping keyMapping;
 
-    public KeyEventHandler(JTextAreaManager manager, NativeKeyEventMapping keyMapping) {
+    public KeyEventHandler(JTextAreaManager manager, @NonNull NativeKeyEventMapping keyMapping) {
         super(manager);
         this.keyMapping = keyMapping;
     }

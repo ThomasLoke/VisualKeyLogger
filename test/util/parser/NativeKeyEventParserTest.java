@@ -1,7 +1,7 @@
 package util.parser;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.jnativehook.keyboard.NativeKeyEvent.*;
+import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -36,10 +36,16 @@ public class NativeKeyEventParserTest {
             out.println("S, ↓");
             out.println("D, →");
             out.println("F, ↑");
+            out.println("Q, ");
+            out.println("E");
         }
         NativeKeyEventParser parser = new NativeKeyEventParser(file);
         ProblemStore problems = parser.parse();
         assertTrue("Fatal errors while parsing input:\n" + problems.toString(), problems.hasNoErrors());
+        NativeKeyEventMapping mapping = parser.getRemapping();
+        assertEquals("←", mapping.get(VC_A));
+        assertEquals(null, mapping.get(VC_Q));
+        assertEquals("E", mapping.get(VC_E));
     }
     
 }

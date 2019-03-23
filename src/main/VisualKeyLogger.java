@@ -56,8 +56,8 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
     private final List<AbstractEventHandler> eventHandlers = new ArrayList<>();
     
     private final @NonNull NativeKeyEventMapping keyMapping;
-    private final JTextAreaManager textAreaManager;
-    private final KeyEventHandler keyEventHandler;
+    private final @NonNull JTextAreaManager textAreaManager;
+    private final @NonNull KeyEventHandler keyEventHandler;
     
     private VisualKeyLogger() {
         setTitle("Visual KeyLogger");
