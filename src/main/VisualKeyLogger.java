@@ -22,15 +22,12 @@ import java.util.UUID;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.JToolBar;
 import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 import javax.swing.text.DefaultCaret;
@@ -39,70 +36,74 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
 
+import event.key.NativeKeyEventMapping;
+import event.key.NativeKeyEventParser;
 import handler.AbstractEventHandler;
 import handler.KeyEventHandler;
 import ui.ContentManager;
 import ui.JTextAreaManager;
-import util.parser.NativeKeyEventMapping;
+import util.problem.ProblemStore;
+import util.problem.ProblemStoreDialog;
+import util.swing.WidgetUtils;
 import util.ui.HistoricFileChooser;
 
 /**
  * Entry point for application
  */
 public class VisualKeyLogger extends JFrame implements WindowListener {
-    
+
     private static final long serialVersionUID = -3468171593621788434L;
-    
+
     private final List<ContentManager> contentManagers = new ArrayList<>();
     private final List<AbstractEventHandler> eventHandlers = new ArrayList<>();
-    
+
     private final @NonNull NativeKeyEventMapping keyMapping;
     private final @NonNull JTextAreaManager textAreaManager;
     private final @NonNull KeyEventHandler keyEventHandler;
-    
+
     private VisualKeyLogger() {
         setTitle("Visual KeyLogger");
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         addWindowListener(this);
-        
+
         setJMenuBar(createMenuBar());
-        
+
         JTextArea textArea = new JTextArea();
         textArea.setEditable(false);
         textArea.setFont(new Font("Serif", Font.BOLD, 20));
         DefaultCaret caret = (DefaultCaret) textArea.getCaret();
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
-        
+
         JScrollPane scrollPane = new JScrollPane(textArea);
         scrollPane.setPreferredSize(new Dimension(500, 1000));
         add(scrollPane, BorderLayout.CENTER);
-        
+
         add(createButtonPanel(), BorderLayout.PAGE_END);
-        
+
         keyMapping = NativeKeyEventMapping.createDefault();
 
         // Setup content managers
         textAreaManager = new JTextAreaManager(textArea);
         contentManagers.add(textAreaManager);
-        
+
         // Register event handlers
         keyEventHandler = new KeyEventHandler(textAreaManager, keyMapping);
         eventHandlers.add(keyEventHandler);
-        
+
         pack();
         setVisible(true);
     }
-    
+
     private JMenuBar createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
         menuBar.add(createRemappingMenu());
         return menuBar;
     }
-    
+
     private JMenu createRemappingMenu() {
         JMenu menu = new JMenu("Remapping settings");
         menu.getAccessibleContext().setAccessibleDescription("Remapping settings");
-        
+
         JMenuItem importItem = new JMenuItem("Import");
         importItem.getAccessibleContext().setAccessibleDescription("Import remapping settings from file");
         importItem.addActionListener(new ActionListener() {
@@ -119,11 +120,17 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
                             JOptionPane.ERROR_MESSAGE);
                     return;
                 }
-                // TODO: Parse file and update model
+                NativeKeyEventParser parser = new NativeKeyEventParser(csvFile);
+                ProblemStore problems = parser.parse();
+                if (!problems.isEmpty()) {
+                    ProblemStoreDialog.createAndShowDialogIfRequired(problems, "Import issues", VisualKeyLogger.this);
+                }
+                NativeKeyEventMapping mapping = parser.getRemapping();
+                keyMapping.putAll(mapping);
             }
         });
         menu.add(importItem);
-        
+
         JMenuItem exportItem = new JMenuItem("Export");
         exportItem.getAccessibleContext().setAccessibleDescription("Export current remapping settings to file");
         exportItem.addActionListener(new ActionListener() {
@@ -161,7 +168,7 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
             }
         });
         menu.add(exportItem);
-        
+
         JMenuItem editItem = new JMenuItem("Edit");
         editItem.getAccessibleContext().setAccessibleDescription("Display and edit remapping settings");
         editItem.addActionListener(new ActionListener() {
@@ -170,19 +177,15 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
             }
         });
         menu.add(editItem);
-        
+
         return menu;
     }
-    
+
     private JComponent createButtonPanel() {
-        JToolBar toolBar = new JToolBar();
-        toolBar.setFloatable(false);
-        
         JButton clearButton = new JButton("Clear display");
         clearButton.setFocusable(false);
         clearButton.addActionListener(e -> contentManagers.forEach(ContentManager::clear));
-        toolBar.add(clearButton);
-        
+
         JButton suspendResumeButton = new JButton("Suspend input");
         suspendResumeButton.setFocusable(false);
         suspendResumeButton.addActionListener(new ActionListener() {
@@ -198,17 +201,10 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
                 paused = !paused;
             }
         });
-        toolBar.add(suspendResumeButton);
-        
-        JPanel toolBarPanel = new JPanel();
-        // Centre-align the button panel by padding it on the left/right
-        toolBarPanel.add(new JLabel());
-        toolBarPanel.add(toolBar);
-        toolBarPanel.add(new JLabel());
-        
-        return toolBarPanel;
+
+        return WidgetUtils.createCentreAlignedButtons(clearButton, suspendResumeButton);
     }
-    
+
     @Override public void windowOpened(WindowEvent e) {
         // Initialise native hook.
         try {
@@ -222,7 +218,7 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
 
         GlobalScreen.addNativeKeyListener(keyEventHandler);
     }
-    
+
     @Override public void windowClosed(WindowEvent e) {
         // Clean up the native hook.
         try {
@@ -233,13 +229,13 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
             System.exit(1);
         }
     }
-    
+
     @Override public void windowClosing(WindowEvent e) { }
     @Override public void windowIconified(WindowEvent e) { }
     @Override public void windowDeiconified(WindowEvent e) { }
     @Override public void windowActivated(WindowEvent e) { }
     @Override public void windowDeactivated(WindowEvent e) { }
-    
+
     static {
         Thread.setDefaultUncaughtExceptionHandler(new UncaughtExceptionHandler() {
             @Override public void uncaughtException(Thread t, Throwable e) {
@@ -270,5 +266,5 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
             }
         });
     }
-    
+
 }

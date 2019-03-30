@@ -1,4 +1,4 @@
-package util.parser;
+package event.key;
 
 import static org.jnativehook.keyboard.NativeKeyEvent.*;
 import static org.junit.Assert.*;
@@ -10,6 +10,8 @@ import org.junit.Rule;
 import org.junit.jupiter.api.Test;
 import org.junit.rules.TemporaryFolder;
 
+import event.key.NativeKeyEventMapping;
+import event.key.NativeKeyEventParser;
 import util.problem.ProblemStore;
 
 public class NativeKeyEventParserTest {

@@ -8,8 +8,8 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.jnativehook.keyboard.NativeKeyEvent;
 import org.jnativehook.keyboard.NativeKeyListener;
 
+import event.key.NativeKeyEventMapping;
 import ui.JTextAreaManager;
-import util.parser.NativeKeyEventMapping;
 
 /**
  * Receives key-presses from the user and translates them into events that get dispatched to the UI

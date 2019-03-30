@@ -7,15 +7,32 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.swing.Icon;
+import javax.swing.UIManager;
+
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 
 public class ProblemStore {
     
     private static final int INITIAL_CAPACITY = 10;
     
+    @NonNullByDefault
     public enum Level {
-        Error, Warning, Info;
+        Error(UIManager.getIcon("OptionPane.errorIcon")),
+        Warning(UIManager.getIcon("OptionPane.warningIcon")),
+        Info(UIManager.getIcon("OptionPane.informationIcon"));
+    	
+    	private Icon icon;
+    	
+    	private Level(Icon icon) {
+    		this.icon = icon;
+    	}
+    	
+    	public Icon getIcon() {
+    		return icon;
+    	}
     }
 
     public static class Problem {
@@ -91,10 +108,25 @@ public class ProblemStore {
         return indices.stream().map(idx -> problems.get(idx)).collect(Collectors.toList());
     }
     
+	/**
+	 * @return a copy of the backing list
+	 */
+	public synchronized List<Problem> getProblems() {
+		return new ArrayList<>(problems);
+    }
+
     public boolean isEmpty(Level level) {
         return getProblems(level).isEmpty();
     }
     
+	public boolean isEmpty() {
+		return problems.isEmpty();
+	}
+
+	public int size() {
+		return problems.size();
+	}
+
     public boolean hasNoErrors() {
         return isEmpty(Level.Error);
     }

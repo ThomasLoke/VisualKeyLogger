@@ -1,9 +1,10 @@
-package util.parser;
+package event.key;
 
-import static util.parser.NativeKeyEventMapping.*;
+import static event.key.NativeKeyEventMapping.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
@@ -22,23 +23,23 @@ import util.problem.ProblemStore;
  * the key-press and 2 is the new string representation.
  */
 public class NativeKeyEventParser {
-    
+
     private final @NonNull File file;
     private final @NonNull NativeKeyEventMapping keyCodeToTextRemapping = createDefault();
-    
+
     public NativeKeyEventParser(@NonNull File file) {
         this.file = file;
     }
-    
+
     public ProblemStore parse() {
         AtomicInteger inputLineCount = new AtomicInteger();
         AtomicInteger parsedLineCount = new AtomicInteger();
         ProblemStore problems = new ProblemStore();
-        try (Stream<String> stream = Files.lines(file.toPath())) {
+        try (Stream<String> stream = Files.lines(file.toPath(), StandardCharsets.UTF_16)) {
             stream.forEach(new Consumer<String>() {
                 @Override public void accept(String line) {
                     inputLineCount.getAndIncrement();
-                    
+
                     List<String> parts = Arrays.asList(line.split(","));
                     parts = parts.stream().map(String::trim).collect(Collectors.toList());
                     if (parts.size() != 2) {
@@ -54,7 +55,7 @@ public class NativeKeyEventParser {
                     String keyDescription = parts.get(1);
                     // If its an empty string, then interpret that as a null value, i.e. ignore key-presses from that key
                     keyCodeToTextRemapping.put(keyCode, keyDescription.isEmpty() ? null : keyDescription);
-                    
+
                     parsedLineCount.getAndIncrement();
                 }
             });
@@ -64,9 +65,9 @@ public class NativeKeyEventParser {
         problems.addInfo(String.format("Successfully parsed %d/%d lines", parsedLineCount.get(), inputLineCount.get()));
         return problems;
     }
-    
+
     public @NonNull NativeKeyEventMapping getRemapping() {
         return keyCodeToTextRemapping;
     }
-    
+
 }

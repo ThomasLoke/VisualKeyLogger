@@ -1,8 +1,8 @@
-package util.parser;
+package event.key;
 
+import static event.key.NativeKeyEventMapping.*;
 import static org.jnativehook.keyboard.NativeKeyEvent.*;
 import static org.junit.Assert.*;
-import static util.parser.NativeKeyEventMapping.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,6 +10,8 @@ import java.util.HashSet;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+
+import event.key.NativeKeyEventMapping;
 
 public class NativeKeyEventMappingTest {
 

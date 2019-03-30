@@ -1,4 +1,4 @@
-package util.parser;
+package event.key;
 
 import static org.jnativehook.keyboard.NativeKeyEvent.*;
 
@@ -14,7 +14,7 @@ import util.map.WrappedMap;
 
 @NonNullByDefault
 public class NativeKeyEventMapping extends WrappedMap<Integer, String> {
-    
+
     private static void addKeyCodes(int... keyCodes) {
         // Handle potential duplicates in text representations of the different virtual key codes
         for (int keyCode : keyCodes) {
@@ -27,9 +27,9 @@ public class NativeKeyEventMapping extends WrappedMap<Integer, String> {
             DEFAULT.put(keyCode, text);
         }
     }
-    
+
     public static final NativeKeyEventMapping DEFAULT = new NativeKeyEventMapping();
-    
+
     static {
         addKeyCodes(VC_ESCAPE);
         addKeyCodes(VC_F1, VC_F2, VC_F3, VC_F4, VC_F5, VC_F6, VC_F7, VC_F8, VC_F9, VC_F10, VC_F11, VC_F12);
@@ -58,14 +58,14 @@ public class NativeKeyEventMapping extends WrappedMap<Integer, String> {
         addKeyCodes(VC_SUN_STOP, VC_SUN_PROPS, VC_SUN_FRONT, VC_SUN_OPEN, VC_SUN_FIND, VC_SUN_AGAIN, VC_SUN_UNDO, VC_SUN_COPY, VC_SUN_INSERT, VC_SUN_CUT);
         addKeyCodes(VC_UNDEFINED);
     }
-    
+
     public static final Map<String, Integer> DEFAULT_INVERSE = DEFAULT.entrySet().stream()
             .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
-    
+
     public static NativeKeyEventMapping createDefault() {
         return new NativeKeyEventMapping(DEFAULT);
     }
-    
+
     private NativeKeyEventMapping() {
         this(new LinkedHashMap<>());
     }
@@ -74,7 +74,7 @@ public class NativeKeyEventMapping extends WrappedMap<Integer, String> {
         // Use a copy so that we don't modify the backing map of the other remapping
         super(new LinkedHashMap<>(other.map));
     }
-    
+
     private NativeKeyEventMapping(LinkedHashMap<Integer, String> map) {
         // Make sure that all access to the backing map is synchronised
         super(Collections.synchronizedMap(map));
