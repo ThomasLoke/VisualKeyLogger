@@ -11,10 +11,17 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 public class WidgetUtils {
 
     public static JPanel createCentreAlignedButtons(JButton... buttons) {
+        return createCentreAlignedButtons(true, buttons);
+    }
+
+    public static JPanel createCentreAlignedButtons(boolean addSeparator, JButton... buttons) {
         JToolBar toolBar = new JToolBar();
         toolBar.setFloatable(false);
-        for (JButton button : buttons) {
-            toolBar.add(button);
+        for (int i = 0; i < buttons.length; i++) {
+            toolBar.add(buttons[i]);
+            if (addSeparator && i < buttons.length - 1) {
+                toolBar.addSeparator();
+            }
         }
 
         JPanel toolBarPanel = new JPanel();

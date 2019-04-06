@@ -70,7 +70,7 @@ public class NativeKeyEventMapping extends WrappedMap<Integer, String> {
         this(new LinkedHashMap<>());
     }
 
-    private NativeKeyEventMapping(NativeKeyEventMapping other) {
+    public NativeKeyEventMapping(NativeKeyEventMapping other) {
         // Use a copy so that we don't modify the backing map of the other remapping
         super(new LinkedHashMap<>(other.map));
     }

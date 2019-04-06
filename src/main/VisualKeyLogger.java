@@ -122,11 +122,10 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
                 }
                 NativeKeyEventParser parser = new NativeKeyEventParser(csvFile);
                 ProblemStore problems = parser.parse();
-                if (!problems.isEmpty()) {
-                    ProblemStoreDialog.createAndShowDialogIfRequired(problems, "Import issues", VisualKeyLogger.this);
-                }
-                NativeKeyEventMapping mapping = parser.getRemapping();
-                keyMapping.putAll(mapping);
+                ProblemStoreDialog.createAndShowDialogIfRequired(problems, "Import issues", VisualKeyLogger.this);
+                if (!problems.hasNoErrors())
+                    return;
+                keyMapping.putAll(parser.getRemapping());
             }
         });
         menu.add(importItem);

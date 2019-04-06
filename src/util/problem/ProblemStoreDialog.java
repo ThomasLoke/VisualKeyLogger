@@ -11,6 +11,7 @@ import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
 
 import com.jgoodies.forms.builder.DefaultFormBuilder;
 import com.jgoodies.forms.layout.FormLayout;
@@ -23,13 +24,13 @@ public class ProblemStoreDialog extends JDialog {
 
     private static final long serialVersionUID = 7102450160109521195L;
 
-    public static void createAndShowDialogIfRequired(ProblemStore problems, String title, Component parent) {
+    public static void createAndShowDialogIfRequired(ProblemStore problems, String title, @Nullable Component parent) {
         if (problems.isEmpty())
             return; // Don't have to show the dialog if we've nothing to report
-        new ProblemStoreDialog(problems, title, parent);
+        SwingUtilities.invokeLater(() -> new ProblemStoreDialog(problems, title, parent));
     }
 
-    public ProblemStoreDialog(ProblemStore problems, String title, Component parent) {
+    private ProblemStoreDialog(ProblemStore problems, String title, @Nullable Component parent) {
         super(parent == null ? null : SwingUtilities.getWindowAncestor(parent), title);
 
         JLabel header = new JLabel("There were errors, warnings and/or information during execution");
@@ -64,12 +65,7 @@ public class ProblemStoreDialog extends JDialog {
         problems.addWarning("An example warning");
         problems.addInfo("Some informative info");
         problems.addWarning("Yet another warning");
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                createAndShowDialogIfRequired(problems, "All the problems", null);
-            }
-        });
+        createAndShowDialogIfRequired(problems, "All the problems", null);
     }
 
 }
