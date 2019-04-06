@@ -36,6 +36,7 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
 
+import event.key.NativeKeyEventEditorDialog;
 import event.key.NativeKeyEventMapping;
 import event.key.NativeKeyEventParser;
 import handler.AbstractEventHandler;
@@ -170,11 +171,7 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
 
         JMenuItem editItem = new JMenuItem("Edit");
         editItem.getAccessibleContext().setAccessibleDescription("Display and edit remapping settings");
-        editItem.addActionListener(new ActionListener() {
-            @Override public void actionPerformed(ActionEvent e) {
-                // TODO: Display + edit dialog
-            }
-        });
+        editItem.addActionListener(e -> NativeKeyEventEditorDialog.createAndShowDialog(VisualKeyLogger.this, keyMapping));
         menu.add(editItem);
 
         return menu;

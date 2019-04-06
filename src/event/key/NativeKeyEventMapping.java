@@ -5,9 +5,11 @@ import static org.jnativehook.keyboard.NativeKeyEvent.*;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 
 import util.map.WrappedMap;
@@ -64,6 +66,10 @@ public class NativeKeyEventMapping extends WrappedMap<Integer, String> {
 
     public static NativeKeyEventMapping createDefault() {
         return new NativeKeyEventMapping(DEFAULT);
+    }
+
+    public static @NonNull String getDefaultText(int key) {
+        return Objects.requireNonNull(DEFAULT.get(key));
     }
 
     private NativeKeyEventMapping() {
