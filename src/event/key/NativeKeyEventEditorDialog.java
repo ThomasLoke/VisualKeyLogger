@@ -9,7 +9,6 @@ import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
@@ -35,8 +34,11 @@ public class NativeKeyEventEditorDialog extends JDialog {
         super(parent == null ? null : SwingUtilities.getWindowAncestor(parent), "Key remapping editor", ModalityType.APPLICATION_MODAL);
         
         DefaultFormBuilder content = new DefaultFormBuilder(new FormLayout("f:p, 50dlu, f:p:g, 10dlu"));
+        content.append(WidgetUtils.createBoldedLabel("KEY"));
+        content.append(WidgetUtils.createBoldedLabel("DISPLAYED TEXT"));
+
         originalMapping.forEach((key, value) -> {
-            content.append(new JLabel(String.format("<html><b>%s</b></html>", getDefaultText(key))));
+            content.append(WidgetUtils.createBoldedLabel(getDefaultText(key)));
 
             JTextField textField = new JTextField(value);
             keyToTextFields.put(key, textField);
