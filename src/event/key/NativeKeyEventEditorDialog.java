@@ -4,6 +4,7 @@ import static event.key.NativeKeyEventMapping.*;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,12 +34,11 @@ public class NativeKeyEventEditorDialog extends JDialog {
     private NativeKeyEventEditorDialog(@Nullable Component parent, NativeKeyEventMapping originalMapping) {
         super(parent == null ? null : SwingUtilities.getWindowAncestor(parent), "Key remapping editor", ModalityType.APPLICATION_MODAL);
         
-        DefaultFormBuilder content = new DefaultFormBuilder(new FormLayout("f:p, 50dlu, f:p:g, 10dlu"));
-        content.append(WidgetUtils.createBoldedLabel("KEY"));
-        content.append(WidgetUtils.createBoldedLabel("DISPLAYED TEXT"));
+        DefaultFormBuilder content = new DefaultFormBuilder(new FormLayout("5dlu, 5dlu, f:p, 10dlu, f:p:g, 10dlu"));
+        content.append("", WidgetUtils.createBoldedLabel("Key"), WidgetUtils.createBoldedLabel("Displayed Text"));
 
         originalMapping.forEach((key, value) -> {
-            content.append(WidgetUtils.createBoldedLabel(getDefaultText(key)));
+            content.append("", WidgetUtils.createBoldedLabel(getDefaultText(key)));
 
             JTextField textField = new JTextField(value);
             keyToTextFields.put(key, textField);
@@ -47,6 +47,7 @@ public class NativeKeyEventEditorDialog extends JDialog {
 
         // Wrap content in a scroll pane
         JScrollPane contentScrollPane = new JScrollPane(content.getPanel());
+        contentScrollPane.setPreferredSize(new Dimension(500, 1000));
         add(contentScrollPane, BorderLayout.CENTER);
 
         JButton applyButton = new JButton("Apply");
