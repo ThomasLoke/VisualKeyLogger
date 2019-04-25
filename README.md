@@ -15,3 +15,7 @@ After deployment (targeted for Windows), two options are provided for execution:
 ## Licensing
 
 This software is covered under the [MIT license](./LICENSE), so feel free to use it if you so desire.
+
+## Resources
+
+The application icon is sourced from <a href="http://cliparts.co">cliparts.co</a>, so kudos to them.

@@ -11,6 +11,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.lang.Thread.UncaughtExceptionHandler;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.UUID;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -66,7 +68,8 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
         setTitle("Visual KeyLogger");
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         addWindowListener(this);
-
+        loadAndSetIcon();
+        
         setJMenuBar(createMenuBar());
 
         JTextArea textArea = new JTextArea();
@@ -93,6 +96,17 @@ public class VisualKeyLogger extends JFrame implements WindowListener {
 
         pack();
         setVisible(true);
+    }
+
+    private void loadAndSetIcon() {
+        URL iconURL = VisualKeyLogger.class.getResource("/icons/application.png");
+        if (iconURL == null) {
+            System.err.println("Failed to load application icon; falling back to default");
+            return;
+        }
+
+        ImageIcon icon = new ImageIcon(iconURL);
+        setIconImage(icon.getImage());
     }
 
     private JMenuBar createMenuBar() {
