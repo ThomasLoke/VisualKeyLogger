@@ -52,7 +52,7 @@ public class NativeKeyEventEditorDialog extends JDialog {
 
         JButton applyButton = new JButton("Apply");
         applyButton.addActionListener(e -> {
-            keyToTextFields.forEach((key, value) -> originalMapping.put(key, value.getText()));
+            keyToTextFields.forEach((key, value) -> originalMapping.put(key, NativeKeyEventMapping.processRawMappedValue(value.getText())));
             dispose();
         });
         JButton cancelButton = new JButton("Cancel");

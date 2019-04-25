@@ -10,11 +10,25 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
 
 import util.map.WrappedMap;
 
 @NonNullByDefault
 public class NativeKeyEventMapping extends WrappedMap<Integer, String> {
+
+    /**
+     * Trims the remapped text and treats it as null (i.e. ignore keypresses from
+     * this button) if its an empty string
+     */
+    public static @Nullable String processRawMappedValue(@Nullable String remappedText) {
+        if (remappedText == null)
+            return null;
+        remappedText = remappedText.trim();
+        if (remappedText.isEmpty())
+            return null;
+        return remappedText;
+    }
 
     private static void addKeyCodes(int... keyCodes) {
         // Handle potential duplicates in text representations of the different virtual key codes

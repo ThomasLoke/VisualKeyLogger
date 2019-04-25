@@ -54,7 +54,7 @@ public class NativeKeyEventParser {
                     }
                     String keyDescription = parts.get(1);
                     // If its an empty string, then interpret that as a null value, i.e. ignore key-presses from that key
-                    keyCodeToTextRemapping.put(keyCode, keyDescription.isEmpty() ? null : keyDescription);
+                    keyCodeToTextRemapping.put(keyCode, NativeKeyEventMapping.processRawMappedValue(keyDescription));
 
                     parsedLineCount.getAndIncrement();
                 }
